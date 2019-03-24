@@ -1,6 +1,8 @@
 
 * ArriVAL - Yet Another Classical planning plan validator written in *modern* Common Lisp
 
+[[arrival.svg]]
+
 This is a library separated from ALIEN classical planner code base.
 
 ARRIVAL provides a binary =arrival= that takes a PDDL problem file, a domain file and
