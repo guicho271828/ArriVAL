@@ -1,0 +1,15 @@
+#!/bin/sh
+#|-*- mode:lisp -*-|#
+#|
+exec ros dynamic-space-size=8000 -L sbcl-bin -m arrival -Q -- $0 "$@"
+|#
+(declaim (sb-ext:muffle-conditions sb-ext:compiler-note style-warning))
+(progn ;;init forms
+  (ros:ensure-asdf)
+  (ql:quickload '(:arrival) :silent t))
+
+(in-package :arrival)
+
+(defun main (&rest argv)
+  (apply #'simulate-main argv))
+;;; vim: set ft=lisp lisp:

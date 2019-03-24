@@ -1,0 +1,76 @@
+
+* ArriVAL - Yet Another Classical planning plan validator written in *modern* Common Lisp
+
+This is a library separated from ALIEN classical planner code base.
+
+ARRIVAL provides a binary =arrival= that takes a PDDL problem file, a domain file and
+a plan file, returns 0 when the plan is correct and returns 1 otherwise.
+
+The implementation is focused on clarity. Unlike
+[INVAL](https://github.com/patrikhaslum/INVAL), the repository follows the
+*modern* Common Lisp repository structure, is ASDF loadable, and is written in
+a clean functional style with pattern matching.
+
+** Installation
+
+Step 1. Install roswell (modern lisp equivalent of pyenv)
+
+On Mac + homebrew,
+
+: brew install roswell
+
+On Linux,
+
+: sudo apt-get -y install git build-essential automake libcurl4-openssl-dev
+: git clone -b release https://github.com/roswell/roswell.git
+: cd roswell
+: sh bootstrap
+: ./configure --prefix=$HOME/.local
+: make
+: make install
+: ~/.local/bin/ros setup   # expect ~5min
+
+Step 2. Install arrival
+
+: $ ~/.local/bin/ros install guicho271828/arrival
+: $ which arrival
+: ~/.roswell/bin/arrival
+
+** Usage
+
+: arrival [-v|-vv|-vvv|--verbose N] DOMAINFILE PROBLEMFILE PLANFILE [TRACEFILE]
+
++ PLANFILE    :: a SEXP file containing plan traces as action signatures.
++ PROBLEMFILE :: a PDDL problem file.
++ DOMAINFILE  :: a PDDL domain file.
++ TRACEFILE   :: An optional output file. Unless specified, the same information
+                 is written to the standard output.
++ -v | -vv | -vvv | --verbose N :: verbosity, from level 1 to 3. Default is 0.
+
+** Dependencies
+This library is at least tested on implementation listed below:
+
++ SBCL 1.4.12 on X86-64 Linux 4.4.0-142-generic (author's environment)
+
+Also, it depends on the following libraries:
+
++ trivia by *Masataro Asai* :
+    NON-optimized pattern matcher compatible with OPTIMA, with extensible optimizer interface and clean codebase
++ alexandria by *Nikodemus Siivola <nikodemus@sb-studio.net>, and others.* :
+    Alexandria is a collection of portable public domain utilities.
++ iterate by ** :
+    Jonathan Amsterdam's iterator/gatherer/accumulator facility
+
+** Author
+
+* Masataro Asai (guicho2.71828@gmail.com)
+
+** Copyright
+
+Copyright (c) 2019 Masataro Asai (guicho2.71828@gmail.com)
+
+* License
+
+Licensed under the LLGPL License.
+
+
