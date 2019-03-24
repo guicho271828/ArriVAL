@@ -1,15 +1,12 @@
 
 * ArriVAL - Yet Another Classical planning plan validator written in *modern* Common Lisp
 
-[[arrival.svg]]
-
 This is a library separated from ALIEN classical planner code base.
 
 ARRIVAL provides a binary =arrival= that takes a PDDL problem file, a domain file and
 a plan file, returns 0 when the plan is correct and returns 1 otherwise.
 
-The implementation is focused on clarity. Unlike
-[INVAL](https://github.com/patrikhaslum/INVAL), the repository follows the
+The implementation is focused on clarity. Unlike [[https://github.com/patrikhaslum/INVAL][INVAL]], the repository follows the
 *modern* Common Lisp repository structure, is ASDF loadable, and is written in
 a clean functional style with pattern matching.
 
@@ -65,7 +62,7 @@ Also, it depends on the following libraries:
 
 ** Author
 
-* Masataro Asai (guicho2.71828@gmail.com)
+Masataro Asai (guicho2.71828@gmail.com)
 
 ** Copyright
 
@@ -75,4 +72,5 @@ Copyright (c) 2019 Masataro Asai (guicho2.71828@gmail.com)
 
 Licensed under the LLGPL License.
 
+[[arrival.svg]]
 
