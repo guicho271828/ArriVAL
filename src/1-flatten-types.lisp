@@ -7,6 +7,7 @@
 (defvar *objects*)
 (defvar *predicates*)
 (defvar *predicate-types*)
+(defvar *fluents*)
 (defvar *actions*)
 (defvar *axioms*)
 (defvar *init*)

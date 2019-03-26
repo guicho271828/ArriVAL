@@ -66,6 +66,7 @@ Value 3   Prints the backtracking for proving axioms")
         *objects*
         (*predicates*      `((= ?o1 ?o2)))
         (*predicate-types* `((= object object)))
+        *fluents*
         *actions*
         *axioms*
         *init*
@@ -129,8 +130,9 @@ Value 3   Prints the backtracking for proving axioms")
        ,@body)))
 
 (defun initialize (next)
-  (let ((*fact-table*     (make-hash-table :test 'equal))
-        (*axiom-table*    (make-hash-table :test 'equal)))
+  (let* ((*fact-table*     (make-hash-table :test 'equal))
+         (*new-fact-table* *fact-table*) ; special treatment during initialization
+         (*axiom-table*    (make-hash-table :test 'equal)))
 
     (let ((objs (mapcar #'car *objects*)))
       (progv objs objs          ;binds objects to itself
@@ -198,7 +200,8 @@ applies an action of the form (name . args) to the current state."
      ;; Fluents; either object or numeric
      (let ((place (list* name (mapcar #'evaluate args))))
        (multiple-value-bind (result exists-p) (gethash place *fact-table*)
-         (assert exists-p nil "The fluent ~a evaluated to ~a, which is uninitialized." form place)
+         (when (member name *fluents* :key #'first)
+           (assert exists-p nil "The fluent ~a evaluated to ~a, which is uninitialized." form place))
          result)))))
 
 (defun (setf evaluate) (newval form)
@@ -209,30 +212,35 @@ applies an action of the form (name . args) to the current state."
     ((list* name args)
      
      (assert (not (find name *axioms* :key (lambda-match (`(:derived (,name ,@_) ,_) name))))
-             nil "~a is a derived predicate" name)
+             nil "Tried to set a value ~a to a derived predicate ~a" newval form)
+     (assert (or (member name *predicates* :key #'first)
+                 (member name *fluents*    :key #'first))
+             nil "~a is not a registered predicate or fluents" name)
      
      (let ((place (list* name (mapcar #'evaluate args))))
 
-       (when (>= *verbosity* 1)
-         (flet ((to-top-bottom (x)
-                  (case x
-                    ((t)   '⊤)
-                    ((nil) '⊥)
-                    (otherwise x))))
-           (format *trace-output*
-                   "; Setting ~30a: ~a -> ~a~%"
-                   place
-                   (to-top-bottom (evaluate place))
-                   (to-top-bottom newval))))
+       (unless *in-initialization*
+         ;; during initialization, we can blindly set the value
+         ;; otherwise, setting a value to an uninitialized fluent is ill-formed
 
-       (if *in-initialization*
-           ;; during initialization, we can blindly set the value
-           (setf (gethash place *fact-table*) newval)
-           ;; otherwise, setting a value to an uninitialized fluent is ill-formed
+         (when (member name *fluents* :key #'first)
            (multiple-value-bind (result exists-p) (gethash place *fact-table*)
              (assert exists-p nil
-                     "The fluent ~a evaluated to ~a, which is uninitialized or a derived predicate." form place)
-             (setf (gethash place *new-fact-table*) newval)))))))
+                     "The fluent ~a evaluated to ~a, which is uninitialized." form place)))
+
+         (when (>= *verbosity* 1)
+           (flet ((to-top-bottom (x)
+                    (case x
+                      ((t)   '⊤)
+                      ((nil) '⊥)
+                      (otherwise x))))
+             (format *trace-output*
+                     "; Setting ~30a: ~a -> ~a~%"
+                     place
+                     (to-top-bottom (evaluate place))
+                     (to-top-bottom newval)))))
+       
+       (setf (gethash place *new-fact-table*) newval)))))
 
 (defvar *hold-level* 1)
 (defun holds (condition result)
