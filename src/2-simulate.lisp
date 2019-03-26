@@ -403,18 +403,31 @@ It respects the conditional effect"
         (effect body)))
 
     ;; fluents
+    (`(= ,place ,value)
+      (assert *in-initialization* nil "= should not be used in the action effect to denote the assignments.~%~
+                        This is only allowed in the problem file definition.")
+      (assert (atom value) nil
+              "An initial assignment should only assign atoms (numbers or objects.)~%~
+               It should not further reference the numeric/object fluents.")
+      (setf (evaluate place) value))
+    
     (`(assign ,place ,value)
-      (setf (fluent place) (fluent value)))
+      (assert (not *in-initialization*) nil "ASSIGN should not be used in the problem definition.")
+      (setf (evaluate place) (evaluate value)))
     (`(increase ,place ,value)
-      (incf (fluent place) (fluent value)))
+      (assert (not *in-initialization*) nil "INCREASE should not be used in the problem definition.")
+      (setf (evaluate place) (evaluate value)))
     (`(decrease ,place ,value)
-      (decf (fluent place) (fluent value)))
+      (assert (not *in-initialization*) nil "DECREASE should not be used in the problem definition.")
+      (setf (evaluate place) (evaluate value)))
     (`(scale-up ,place ,value)
-      (setf (fluent place)
-            (* (fluent place) (fluent value))))
+      (assert (not *in-initialization*) nil "SCALE-UP should not be used in the problem definition.")
+      (setf (evaluate place)
+            (* (evaluate place) (evaluate value))))
     (`(scale-down ,place ,value)
-      (setf (fluent place)
-            (/ (fluent place) (fluent value))))
+      (assert (not *in-initialization*) nil "SCALE-DOWN should not be used in the problem definition.")
+      (setf (evaluate place)
+            (/ (evaluate place) (evaluate value))))
     
     (`(not ,place)
       (unless *relaxed-planning*
