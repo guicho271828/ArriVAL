@@ -3,14 +3,15 @@
 
 (named-readtables:in-readtable :fare-quasiquote)
 
-(defvar *types*)
-(defvar *objects*)
-(defvar *predicates*)
-(defvar *fluents*)
-(defvar *actions*)
-(defvar *axioms*)
-(defvar *init*)
-(defvar *goal*)
+(defvar *types* nil "An alist of (type . supertype).")
+(defvar *objects* nil "An alist of (name . type).")
+(defvar *predicates* nil "A list of predicate type signatures, e.g. ((next location location) ...) ")
+(defvar *fluents*  nil "A list of fluent type signatures, e.g. ((next location location) ...).
+ It does not store information about whether it is an object fluent or a numeric fluent.")
+(defvar *actions* nil "A list of action definitions whose types are compiled away.")
+(defvar *axioms*  nil "A list of axiom definitions whose types are compiled away.")
+(defvar *init*  nil "Initial state augmented with the type predicates for the objects. ")
+(defvar *goal*  nil "Goal condition, whose types are compiled away. (types appears in forall/exists)")
 
 (defun variablep (variable)
   (ematch variable
@@ -20,9 +21,22 @@
      nil)))
 
 (defun parse-typed-def (list)
-  "Parse [objs* - type]* list. Does not handle the type inheritance.
- Returns an alist of (parameter . type).
- Untyped parameters are given the type OBJECT."
+  "Parse a list of form [obj* - type]* .
+ Returns an alist of (obj . type).
+ Does not handle the type inheritance.
+ Untyped parameters are given the type OBJECT.
+ The order is preserved.
+ It does not care what the obj is. It can be a list, too.
+
+Example: (parse-typed-def '(airport1 - airport truck1 truck2 - truck banana))
+
+->  ((airport1 . airport) (truck1 . truck) (truck2 . truck) (banana . object))
+
+Example: (parse-typed-def '((deposit ?p - person) - number (content ?e - envelope) - paper))
+
+->  (((deposit ?p - person) . number) ((content ?e - envelope) . paper))
+
+"
   (let (db
         buffer)
     (labels ((add (s type)
@@ -58,7 +72,7 @@
        (iter (for (type . supertype) in parsed)
              (when (not (or (eq supertype 'object)
                             (assoc supertype *types*)))
-               (warn "connecting the orphan supertype ~a to object" supertype)
+               (warn "connecting an orphan supertype ~a to OBJECT" supertype)
                (push (cons supertype 'object) *types*)))
        (appendf *predicates*
                 (iter (for (current . parent) in *types*)
@@ -83,14 +97,25 @@ Signals an error when the type is not connected to the root OBJECT type."
 
 (defun flatten-types/argument (arg type)
   "Returns a list of type predicates for each parent type of TYPE,
- with ARG as the argument."
+ with ARG as the argument. The result does not contain the OBJECT type.
+
+Example: (flatten-types/argument '?x 'airport) -> ((airport ?x) (location ?x))
+"
   (iter (for parent in (flatten-type type))
         (unless (eq parent 'object)
           (collecting `(,parent ,arg)))))
 
 (defun flatten-types/predicate (predicate &optional include-parent-types)
-  "Look up the *predicate-types* and returns a list of type predicates and the
-original predicate."
+  "PREDICATE is a predicate form (name args...).
+Look up the *predicates* and returns a list that contains itself
+and the type predicates implied by its arguments.
+By default, the implied type predicates contain only those for the most specific types,
+minus the obvious OBJECT type.
+
+Example: (flatten-types/predicate '(next ?x ?y)) -> ((next ?x ?y) (location ?x) (location ?y))
+
+When the optional argument INCLUDE-PARENT-TYPES is true, the list also contains all the type predicates
+up in the type hierarchy, minus the OBJECT type."
   (ematch predicate
     ((list* name args)
      (list* predicate
@@ -98,11 +123,11 @@ original predicate."
                 (mappend #'flatten-types/argument
                          args
                          (cdr (or (assoc name *predicates*)
-                                  (error "Predicate type for ~a is missing!" name))))
+                                  (error "Predicate for ~a is missing!" name))))
                 (remove 'object
                         (mapcar #'list 
                                 (cdr (or (assoc name *predicates*)
-                                         (error "Predicate type for ~a is missing!" name)))
+                                         (error "Predicate for ~a is missing!" name)))
                                 args)
                         :key #'first))))))
 
