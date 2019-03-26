@@ -183,15 +183,15 @@ applies an action of the form (name . args) to the current state."
             (format *trace-output* "; Precondition ~a satisfied~%" pre))
           (effect eff)))))))
 
-(defun evaluate (value)
+(defun evaluate (form)
   "Evaluate atoms, predicates and (object/numeric) fluents."
-  (ematch value
+  (ematch form
     ((type symbol)
      ;; Parameters and objects: ?x, truck
-     (symbol-value value))
+     (symbol-value form))
     ((type atom)
      ;; Numbers, but additionally strings etc. to make planner usable as a lisp library
-     value)
+     form)
     ((list* name args)
      ;; Fluents; either object or numeric
      (gethash (list* name (mapcar #'evaluate args)) *fact-table*))))
