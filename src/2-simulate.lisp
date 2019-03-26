@@ -251,10 +251,9 @@ applies an action of the form (name . args) to the current state."
                 (test `(exists ,args ,body))))
             (mapcar #'car *objects*)))
     (`(= ,@args)
+      ;; note: = could be used for both unification and numeric constraint
       (assert (= 2 (length args)) nil "Equality predicate is binary")
       (let ((args (mapcar #'evaluate args)))
-        (assert (subsetp args (mapcar #'car *objects*))
-                nil "Objects ~a are not registered" (set-difference args (mapcar #'car *objects*)))
         (holds condition
                (equalp (first args) (second args)))))
     (`(,(and op (or '< '> '>= '<=)) ,@args)
