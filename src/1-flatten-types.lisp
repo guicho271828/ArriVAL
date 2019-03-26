@@ -77,12 +77,7 @@ Signals an error when the type is not connected to the root OBJECT type."
                        (with parent-found = nil)
                        (when (eq current type)
                          (setf parent-found t)
-                         (rec parent))
-                       (finally
-                        (when (not parent-found)
-                          (when (not (eq 'object type))
-                            (error "Type ~a is disconnected from the root OBJECT type!~%Inserting dependency to OBJECT" type)
-                            (pushnew 'object acc))))))))
+                         (rec parent))))))
       (rec type)
       acc)))
 
