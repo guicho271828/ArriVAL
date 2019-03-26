@@ -5,9 +5,8 @@
 
 (defvar *types* nil "An alist of (type . supertype).")
 (defvar *objects* nil "An alist of (name . type).")
-(defvar *predicates* nil "A list of predicate type signatures, e.g. ((next location location) ...) ")
-(defvar *fluents*  nil "A list of fluent type signatures, e.g. ((next location location) ...).
- It does not store information about whether it is an object fluent or a numeric fluent.")
+(defvar *predicates* nil "A list of predicate type signatures (head arg-types*), e.g. ((next location location) ...) ")
+(defvar *fluents*  nil "A list of fluent type signatures (head arg-types* result-type) , e.g. ((content envelope paper) ...).")
 (defvar *actions* nil "A list of action definitions whose types are compiled away.")
 (defvar *axioms*  nil "A list of axiom definitions whose types are compiled away.")
 (defvar *init*  nil "Initial state augmented with the type predicates for the objects. ")
