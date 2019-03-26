@@ -214,9 +214,19 @@ up in the type hierarchy, minus the OBJECT type."
      (dolist (predicate predicates)
        (match predicate
          (`(,name ,@typed-def)
-           (multiple-value-bind (w/o-type type-conditions parsed) (flatten-typed-def typed-def)
-             (declare (ignore w/o-type type-conditions))
-             (push `(,name ,@(mapcar #'cdr parsed)) *predicates*))))))))
+           (let ((arguments (parse-typed-def typed-def)))
+             (push `(,name ,@(mapcar #'cdr arguments)) *predicates*))))))))
+
+(defun grovel-fluents (domain)
+  (match domain
+    ((assoc :functions typed-def)
+     (dolist (fluent (parse-typed-def typed-def)) ; ignores the second/third value
+       (match fluent
+         ((cons `(,name ,@typed-def) value-type)
+          (let ((arguments (parse-typed-def typed-def)))
+            ;; the last type is the value type.
+            ;; this is because (head args...) -> obj is equivalent to (head args... obj) -> t.
+            (push `(,name ,@(mapcar #'cdr arguments) ,value-type) *fluents*))))))))
 
 (defun grovel-init (problem)
   (ematch problem
