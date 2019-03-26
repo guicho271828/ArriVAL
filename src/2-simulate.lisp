@@ -80,6 +80,8 @@ Value 3   Prints the backtracking for proving axioms")
     (grovel-axioms     domain)
     (simulate3 callback)))
 
+(defvar *in-initialization* nil)
+
 (defvar *next-action*)
 (defvar *previous-action*)
 (defvar *fact-table*)
@@ -130,11 +132,10 @@ Value 3   Prints the backtracking for proving axioms")
   (let ((*fact-table*     (make-hash-table :test 'equal))
         (*axiom-table*    (make-hash-table :test 'equal)))
 
-    (iter (for f in *init*)
-          (setf (gethash f *fact-table*) t))
-
     (let ((objs (mapcar #'car *objects*)))
       (progv objs objs          ;binds objects to itself
+        (let ((*in-initialization* t))
+          (mapcar #'effect *init*))
         (funcall next)))))
 
 (defun %in-fresh-binding (fn)
@@ -199,6 +200,39 @@ applies an action of the form (name . args) to the current state."
        (multiple-value-bind (result exists-p) (gethash place *fact-table*)
          (assert exists-p nil "The fluent ~a evaluated to ~a, which is uninitialized." form place)
          result)))))
+
+(defun (setf evaluate) (newval form)
+  "Evaluate the input into a form that is can be directly evaluated."
+  (ematch form
+    ((type atom)
+     (error "Literals cannot be modified. literal: ~a" form))
+    ((list* name args)
+     
+     (assert (not (find name *axioms* :key (lambda-match (`(:derived (,name ,@_) ,_) name))))
+             nil "~a is a derived predicate" name)
+     
+     (let ((place (list* name (mapcar #'evaluate args))))
+
+       (when (>= *verbosity* 1)
+         (flet ((to-top-bottom (x)
+                  (case x
+                    ((t)   '⊤)
+                    ((nil) '⊥)
+                    (otherwise x))))
+           (format *trace-output*
+                   "; Setting ~30a: ~a -> ~a~%"
+                   place
+                   (to-top-bottom (evaluate place))
+                   (to-top-bottom newval))))
+
+       (if *in-initialization*
+           ;; during initialization, we can blindly set the value
+           (setf (gethash place *fact-table*) newval)
+           ;; otherwise, setting a value to an uninitialized fluent is ill-formed
+           (multiple-value-bind (result exists-p) (gethash place *fact-table*)
+             (assert exists-p nil
+                     "The fluent ~a evaluated to ~a, which is uninitialized or a derived predicate." form place)
+             (setf (gethash place *new-fact-table*) newval)))))))
 
 (defvar *hold-level* 1)
 (defun holds (condition result)
@@ -382,38 +416,12 @@ It respects the conditional effect"
       (setf (fluent place)
             (/ (fluent place) (fluent value))))
     
-    (`(not (,name ,@args))
-      (let ((args (mapcar #'evaluate args)))
-        (assert (member name *predicates* :key #'first)
-                nil "~a is not a registered predicate" name)
-        (assert (subsetp args (mapcar #'car *objects*))
-                nil "Objects ~a are not registered" (set-difference args (mapcar #'car *objects*)))
+    (`(not ,place)
+      (unless *relaxed-planning*
+        (setf (evaluate place) nil)))
 
-        (assert (not (find name *axioms* :key (lambda-match (`(:derived (,name ,@_) ,_) name))))
-                nil "~a is a derived predicate" name)
-
-        (when *relaxed-planning*
-          (when (>= *verbosity* 1)
-            (format *trace-output* "; Deleting ~a (ignored)~%" `(,name ,@args)))
-          (return-from effect))
-
-        (when (>= *verbosity* 1)
-          (format *trace-output* "; Deleting ~30a: ~a -> ~a~%" `(,name ,@args) (if (gethash (list* name args) *new-fact-table*) '⊤ '⊥) '⊥))
-        (setf (gethash (list* name args) *new-fact-table*) nil)))
-
-    (`(,name ,@args)
-      (let ((args (mapcar #'evaluate args)))
-        (assert (member name *predicates* :key #'first)
-                nil "~a is not a registered predicate" name)
-        (assert (subsetp args (mapcar #'car *objects*))
-                nil "Objects ~a are not registered" (set-difference args (mapcar #'car *objects*)))
-
-        (assert (not (find name *axioms* :key (lambda-match (`(:derived (,name ,@_) ,_) name))))
-                nil "~a is a derived predicate" name)
-        
-        (when (>= *verbosity* 1)
-          (format *trace-output* "; Adding   ~30a: ~a -> ~a~%" `(,name ,@args) (if (gethash (list* name args) *new-fact-table*) '⊤ '⊥) '⊤))
-        (setf (gethash (list* name args) *new-fact-table*) t)))))
+    (place
+     (setf (evaluate place) t))))
 
 (defun facts ()
   "Returns a list of facts that hold in the current state.
