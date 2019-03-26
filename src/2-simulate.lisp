@@ -64,8 +64,7 @@ Value 3   Prints the backtracking for proving axioms")
     (format *trace-output* "; Flattening the types~%"))
   (let (*types*
         *objects*
-        (*predicates*      `((= ?o1 ?o2)))
-        (*predicate-types* `((= object object)))
+        (*predicates*      `((= object object)))
         *fluents*
         *actions*
         *axioms*

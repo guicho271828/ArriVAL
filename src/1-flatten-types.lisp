@@ -6,7 +6,6 @@
 (defvar *types*)
 (defvar *objects*)
 (defvar *predicates*)
-(defvar *predicate-types*)
 (defvar *fluents*)
 (defvar *actions*)
 (defvar *axioms*)
@@ -62,10 +61,6 @@
                (warn "connecting the orphan supertype ~a to object" supertype)
                (push (cons supertype 'object) *types*)))
        (appendf *predicates*
-                (mapcar (lambda-ematch
-                          ((cons type _) `(,type ?o)))
-                        *types*))
-       (appendf *predicate-types*
                 (iter (for (current . parent) in *types*)
                       (collecting
                        `(,current ,parent))))))))
@@ -107,11 +102,11 @@ original predicate."
             (if include-parent-types
                 (mappend #'flatten-types/argument
                          args
-                         (cdr (or (assoc name *predicate-types*)
+                         (cdr (or (assoc name *predicates*)
                                   (error "Predicate type for ~a is missing!" name))))
                 (remove 'object
                         (mapcar #'list 
-                                (cdr (or (assoc name *predicate-types*)
+                                (cdr (or (assoc name *predicates*)
                                          (error "Predicate type for ~a is missing!" name)))
                                 args)
                         :key #'first))))))
@@ -200,9 +195,8 @@ original predicate."
        (match predicate
          (`(,name ,@typed-def)
            (multiple-value-bind (w/o-type type-conditions parsed) (flatten-typed-def typed-def)
-             (declare (ignore type-conditions))
-             (push `(,name ,@w/o-type) *predicates*)
-             (push `(,name ,@(mapcar #'cdr parsed)) *predicate-types*))))))))
+             (declare (ignore w/o-type type-conditions))
+             (push `(,name ,@(mapcar #'cdr parsed)) *predicates*))))))))
 
 (defun grovel-init (problem)
   (ematch problem
