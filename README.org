@@ -15,15 +15,14 @@ pattern matching.
 
 ArriVAL ignores the =:requirement=. The following features are supported:
 
-|                 | detail                                 |
-|-----------------+----------------------------------------|
-| STRIPS          | supports =and=                         |
-| ADL             | supports =forall= =exists= =when= =or= |
-| Axioms          | supports :derived                      |
-| types           | not supporting =either=                |
-| action-cost     |                                        |
-| numeric fluents |                                        |
-| objects fluents |                                        |
+|         | detail                                           |
+|---------+--------------------------------------------------|
+| STRIPS  | supports =and=                                   |
+| ADL     | supports =forall= =exists= =when= =or=           |
+| Axioms  | supported                                        |
+| types   | supported except =either=                        |
+|---------+--------------------------------------------------|
+| fluents | supported (beta) (numeric, objects, action-cost) |
 
 Arrival currently has no plan to support scheduling problems.
 
