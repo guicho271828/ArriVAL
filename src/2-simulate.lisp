@@ -188,13 +188,17 @@ applies an action of the form (name . args) to the current state."
   (ematch form
     ((type symbol)
      ;; Parameters and objects: ?x, truck
+     (assert (boundp form) nil "The object/parameter ~a is unbound." form)
      (symbol-value form))
     ((type atom)
      ;; Numbers, but additionally strings etc. to make planner usable as a lisp library
      form)
     ((list* name args)
      ;; Fluents; either object or numeric
-     (gethash (list* name (mapcar #'evaluate args)) *fact-table*))))
+     (let ((place (list* name (mapcar #'evaluate args))))
+       (multiple-value-bind (result exists-p) (gethash place *fact-table*)
+         (assert exists-p nil "The fluent ~a evaluated to ~a, which is uninitialized." form place)
+         result)))))
 
 (defvar *hold-level* 1)
 (defun holds (condition result)
