@@ -220,7 +220,7 @@ up in the type hierarchy, minus the OBJECT type."
 (defun grovel-fluents (domain)
   (match domain
     ((assoc :functions typed-def)
-     (dolist (fluent (parse-typed-def typed-def)) ; ignores the second/third value
+     (dolist (fluent (parse-typed-def typed-def))
        (match fluent
          ((cons `(,name ,@typed-def) value-type)
           (let ((arguments (parse-typed-def typed-def)))
