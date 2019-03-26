@@ -6,9 +6,27 @@ This is a library separated from ALIEN classical planner code base.
 ARRIVAL provides a binary =arrival= that takes a PDDL problem file, a domain file and
 a plan file, returns 0 when the plan is correct and returns 1 otherwise.
 
-The implementation is focused on clarity. Unlike [[https://github.com/patrikhaslum/INVAL][INVAL]], the repository follows the
-*modern* Common Lisp repository structure, is ASDF loadable, and is written in
-a clean functional style with pattern matching.
+The implementation is intensively focused on clarity: The total LOC is just 941.
+This is even shorter compared to [[https://github.com/patrikhaslum/INVAL][INVAL]] validator.
+
+Unlike [[https://github.com/patrikhaslum/INVAL][INVAL]], the repository follows the *modern* Common Lisp repository
+structure, is ASDF loadable, and is written in a clean functional style with
+pattern matching.
+
+ArriVAL ignores the =:requirement=. The following features are supported:
+
+|                 | detail                                 |
+|-----------------+----------------------------------------|
+| STRIPS          | supports =and=                         |
+| ADL             | supports =forall= =exists= =when= =or= |
+| Axioms          | supports :derived                      |
+| types           | not supporting =either=                |
+| action-cost     |                                        |
+| numeric fluents |                                        |
+| objects fluents |                                        |
+
+Arrival currently has no plan to support scheduling problems.
+
 
 ** Installation
 
