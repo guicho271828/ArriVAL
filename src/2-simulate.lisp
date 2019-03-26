@@ -451,7 +451,9 @@ it includes the type predicates (true by default)"
                                 (format *trace-output* "; Ignoring type predicate ~a~%" val)))
                             (not found))))
                        t))
-          (collect key))))
+          (case val
+            ((t nil) (collect key))
+            (otherwise `(= ,key ,val))))))
 
 (defun pprint-pddl-to-string (thing)
   "Print THING to the string, inside the PDDL package."
