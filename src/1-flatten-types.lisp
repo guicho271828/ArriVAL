@@ -234,8 +234,6 @@ up in the type hierarchy, minus the OBJECT type."
      (appendf *init*
               (iter (for condition in predicates)
                     (ematch condition
-                      ((list* '= _)
-                       (log:trace "skipping ~a" condition))
                       ((list* 'not _)
                        (log:trace "skipping ~a -- closed world assumption" condition))
                       (_
