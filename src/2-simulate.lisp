@@ -135,7 +135,7 @@ Value 3   Prints the backtracking for proving axioms")
     (let ((objs (mapcar #'car *objects*)))
       (progv objs objs          ;binds objects to itself
         (let ((*in-initialization* t))
-          (mapcar #'effect *init*))
+          (mapcar #'apply-effect *init*))
         (funcall next)))))
 
 (defun %in-fresh-binding (fn)
@@ -182,7 +182,7 @@ applies an action of the form (name . args) to the current state."
                     (with-output-to-string (s) (pprint-facts s))))
           (when (>= *verbosity* 1)
             (format *trace-output* "; Precondition ~a satisfied~%" pre))
-          (effect eff)))))))
+          (apply-effect eff)))))))
 
 (defun evaluate (form)
   "Evaluate atoms, predicates and (object/numeric) fluents."
@@ -382,25 +382,25 @@ This function is not responsible for caching the result."
                            (go :start))
                          (signal c))))))))))))
 
-(defun effect (condition)
+(defun apply-effect (condition)
   "Applies the effect of the condition.
 It respects the conditional effect"
   (ematch condition
     (nil
      nil)
     (`(and ,@conditions)
-      (map nil #'effect conditions))
+      (map nil #'apply-effect conditions))
     (`(forall () ,body)
-      (effect body))
+      (apply-effect body))
     (`(forall (,arg ,@args) ,body)
       (assert (variablep arg))
       (map nil (lambda (o)
                  (progv* (list arg) (list o)
-                   (effect `(forall ,args ,body))))
+                   (apply-effect `(forall ,args ,body))))
            (mapcar #'car *objects*)))
     (`(when ,condition ,body)
       (when (test condition)
-        (effect body)))
+        (apply-effect body)))
 
     ;; fluents
     (`(= ,place ,value)
