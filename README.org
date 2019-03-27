@@ -15,14 +15,24 @@ pattern matching.
 
 ArriVAL ignores the =:requirement=. The following features are supported:
 
-|         | detail                                           |
-|---------+--------------------------------------------------|
-| STRIPS  | supports =and=                                   |
-| ADL     | supports =forall= =exists= =when= =or=           |
-| Axioms  | supported                                        |
-| types   | supported except =either=                        |
-|---------+--------------------------------------------------|
-| fluents | supported (beta) (numeric, objects, action-cost) |
+|                                  | detail                                                          |
+|----------------------------------+-----------------------------------------------------------------|
+| STRIPS                           | =and=                                                           |
+| negative precondition            | =not=                                                           |
+| disjunctive precondition         | =or= =imply=                                                    |
+| universal precondition           | =forall=                                                        |
+| existential preondition          | =exists=                                                        |
+| conditional effects              | =when=                                                          |
+| The =forall= in effects          | supported                                                       |
+| ADL                              | supports =forall= =exists= =when= =or= =imply=                  |
+| Axioms                           | supported, fixpoint calculation                                 |
+| types                            | supported except =either=                                       |
+| equality (===)                   | supported                                                       |
+| duplicate args in actions/axioms | supported, imply equality constaints                            |
+|----------------------------------+-----------------------------------------------------------------|
+| fluents                          | supported (beta) (numeric, objects, action-cost)                |
+|                                  | e.g. =assign=, =increase=, =decrease=, =scale-up=, =scale-down= |
+|                                  | It accepts both integers and floats.                            |
 
 Arrival currently has no plan to support scheduling problems.
 
