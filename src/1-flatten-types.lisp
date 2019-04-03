@@ -263,9 +263,9 @@ up in the type hierarchy, minus the OBJECT type."
                                  ,(flatten-types/condition pre))
                             :effect ,(flatten-types/effect eff))))
                *actions*)))
-       ((list* something _)
-        ;; (log:info "ignoring (~s ...)" something)
-        ))))
+      #+(or)
+      ((list* something _)
+       (log:info "ignoring (~s ...)" something)))))
 
 (defun grovel-axioms (domain)
   (dolist (it domain)
@@ -280,9 +280,9 @@ up in the type hierarchy, minus the OBJECT type."
                                    ,@unifiers
                                    ,(flatten-types/condition condition)))))
                 *axioms*)))
+       #+(or)
        ((list* something _)
-        ;; (log:info "ignoring (~s ...)" something)
-        ))))
+        (log:info "ignoring (~s ...)" something)))))
 
 (defun new-variable ()
   "Interns a new symbol in ARRIVAL.PDDL"
