@@ -50,13 +50,13 @@ Value 3   Prints the backtracking for proving axioms")
            (format *trace-output* "; the domain and the problem matched~%"))
          (warn "the domain name in the problem file does not match the name in the domain file"))
      (simulate2 domain-body problem-body callback))
-    ((`(arrival.pddl::define (arrival.pddl::domain ,domain) ,@domain-body)
+    ((`(arrival.pddl::define (arrival.pddl::domain ,_) ,@_)
        _)
      (error "malformed problem file input"))
     ((_
       `(arrival.pddl::define (arrival.pddl::problem ,_)
-          (:domain ,domain2)
-         ,@problem-body))
+          (:domain ,_)
+         ,@_))
      (error "malformed domain file input"))))
 
 (defun simulate2 (domain problem callback)
@@ -225,6 +225,7 @@ applies an action of the form (name . args) to the current state."
 
          (when (member name *fluents* :key #'first)
            (multiple-value-bind (result exists-p) (gethash place *fact-table*)
+             (declare (ignore result))
              (assert exists-p nil
                      "The fluent ~a evaluated to ~a, which is uninitialized." form place)))
 
