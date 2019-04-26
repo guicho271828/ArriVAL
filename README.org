@@ -58,9 +58,23 @@ On Linux (without linuxbrew),
 
 Step 2. Install arrival
 
-: $ ~/.local/bin/ros install guicho271828/arrival
-: $ which arrival
-: ~/.roswell/bin/arrival
+#+begin_src
+$ ~/.local/bin/ros install guicho271828/arrival
+$ ~/.roswell/bin/arrival
+Usage: [--notype] [-v[v[v]] | --verbose N] [-r|--relaxed] arrival domain problem planfile [trace-output]
+     --notype    : The trace output will not contain the type predicates
+-v | --verbose N : Specify the verbosity, from 0 to 3                   
+-r | --relaxed   : Perform the relaxed planning instead                 
+Got ARGV: NIL
+            dynamic space size: 8388608000
+      lisp implementation type: SBCL
+   lisp implementation version: 1.4.12
+              machine instance: masataro-ThinkPad-T460
+                  machine type: X86-64
+               machine version: Intel(R) Core(TM) i5-6300U CPU @ 2.40GHz
+                 software type: Linux
+              software version: 4.4.0-145-generic
+#+end_src
 
 ** Usage
 
