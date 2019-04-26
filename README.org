@@ -41,11 +41,11 @@ Arrival currently has no plan to support scheduling problems.
 
 Step 1. Install Roswell (https://roswell.github.io/) (modern lisp equivalent of pyenv)
 
-On Mac + homebrew,
+On Mac + homebrew or Linux + [[https://docs.brew.sh/Homebrew-on-Linux][linuxbrew]],
 
 : brew install roswell
 
-On Linux,
+On Linux (without linuxbrew),
 
 : sudo apt-get -y install git build-essential automake libcurl4-openssl-dev
 : git clone -b release https://github.com/roswell/roswell.git
