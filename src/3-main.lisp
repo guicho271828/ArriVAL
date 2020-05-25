@@ -48,8 +48,8 @@
           (fresh-line s)))
        (fresh-line s)))
     (_
-     (format *error-output* "Usage: [--notype] [-v[v[v]] | --verbose N] [-r|--relaxed] arrival domain problem planfile [trace-output]~%")
-     (format *error-output* "     --notype    : The trace output will not contain the type predicates~%")
+     (format *error-output* "Usage: [--no-type] [-v[v[v]] | --verbose N] [-r|--relaxed] arrival domain problem planfile [trace-output]~%")
+     (format *error-output* "     --no-type   : The trace output will not contain the type predicates~%")
      (format *error-output* "-v | --verbose N : Specify the verbosity, from 0 to 3                   ~%")
      (format *error-output* "-r | --relaxed   : Perform the relaxed planning instead                 ~%")
      (format *error-output* "Got ARGV: ~a~%" argv)
