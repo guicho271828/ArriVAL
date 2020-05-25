@@ -452,7 +452,7 @@ it includes the type predicates (true by default)"
   (iter (for (key val) in-hashtable *fact-table*)
         (when (and val
                    (if *exclude-type-predicates-in-trace*
-                       (ematch val
+                       (ematch key
                          ((list* name _)
                           (let ((found (find name *types* :key #'car)))
                             (when found
