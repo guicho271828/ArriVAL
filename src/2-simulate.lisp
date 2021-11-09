@@ -115,9 +115,9 @@ Value 3   Prints the backtracking for proving axioms")
      (if (test *goal*)
          (when (>= *verbosity* 1)
            (format *trace-output* "; goal condition satisfied~%"))
-         (warn "Goal not satisfied state:~%~a~%goal~%~a"
-               (facts)
-               *goal*)))))
+         (error "Goal not satisfied state:~%~a~%goal~%~a"
+                (facts)
+                *goal*)))))
 
 (defmacro progv* (vars vals &body body)
   "progv + printing feature."
