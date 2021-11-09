@@ -47,11 +47,12 @@
      (push 'precondition-not-satisfied-error *allowed-conditions*)
      (parse-arguments rest))
     
-    ((list _ _ _)
-     (parse-arguments `(,@argv "/dev/stdout")))
+    ((list domain problem plan-output-file)
+     (parse-argument2 domain problem plan-output-file *standard-output*))
     
     ((list domain problem plan-output-file trace-output-file)
-     (parse-argument2 domain problem plan-output-file trace-output-file))
+     (with-open-file (s trace-output-file :direction :output :if-does-not-exist :create :if-exists :supersede)
+       (parse-argument2 domain problem plan-output-file s)))
     (_
      (format *error-output* "Usage: [options] arrival domain problem planfile [trace-output]~%")
      (format *error-output* "     --no-type   : The trace output will not contain the type predicates~%")
@@ -72,20 +73,19 @@
                    "software version" (software-version))))))
 
 ;; ignore certain errors
-(defun parse-argument2 (domain problem plan-output-file trace-output-file)
+(defun parse-argument2 (domain problem plan-output-file trace-output)
   (handler-bind
       ((error (lambda (c)
                 (format *error-output* "~a~%" c)
                 (if (member (type-of c) *allowed-conditions*)
                     (continue c)))))
-    (parse-argument3 domain problem plan-output-file trace-output-file)))
+    (parse-argument3 domain problem plan-output-file trace-output)))
 
 ;; call simulate-plan-from-file
-(defun parse-argument3 (domain problem plan-output-file trace-output-file)
-  (with-open-file (s trace-output-file :direction :output :if-does-not-exist :create :if-exists :supersede)
-    (simulate-plan-from-file
-     domain problem plan-output-file
-     (lambda ()
-       (pprint-facts s)
-       (fresh-line s)))
-    (fresh-line s)))
+(defun parse-argument3 (domain problem plan-output-file trace-output)
+  (simulate-plan-from-file
+   domain problem plan-output-file
+   (lambda ()
+     (pprint-facts trace-output)
+     (fresh-line trace-output)))
+  (fresh-line trace-output))
