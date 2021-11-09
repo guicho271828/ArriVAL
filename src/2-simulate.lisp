@@ -17,6 +17,47 @@ Value 3   Prints the backtracking for proving axioms")
 (declaim (boolean *exclude-type-predicates-in-trace*))
 (defvar *exclude-type-predicates-in-trace* nil)
 
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (define-condition domain-parse-error (error) ()
+    (:report "malformed domain file input"))
+  (define-condition problem-parse-error (error) ()
+    (:report "malformed problem file input"))
+  (define-condition domain-name-mismatch-error (error) ()
+    (:report "the domain name in the problem file does not match the name in the domain file"))
+
+  (define-condition goal-not-satisfied-error (error)
+    ((state :initarg :state)
+     (goal  :initarg :goal))
+    (:report goal-not-satisfied-error-printer))
+
+  (define-condition precondition-not-satisfied-error (error)
+    ((state :initarg :state)
+     (action  :initarg :action)
+     (params  :initarg :params)
+     (args  :initarg :args)
+     (pre  :initarg :pre))
+    (:report precondition-not-satisfied-error-printer)))
+
+(defun goal-not-satisfied-error-printer (c s)
+  (ematch c
+    ((goal-not-satisfied-error state goal)
+     (format s "Goal not satisfied at state:~%~a~%goal~%~a" state goal))))
+
+(defun precondition-not-satisfied-error-printer (c s)
+  (ematch c
+    ((precondition-not-satisfied-error state action params args pre)
+     (format s "Precondition for action ~a unsatisfied.~2%~@{ ~a = ~a~2%~}"
+             (pprint-pddl-to-string action)
+             :parameters
+             (pprint-pddl-to-string params)
+             :args
+             (pprint-pddl-to-string args)
+             :precondition
+             (pprint-pddl-to-string pre)
+             :state
+             (with-output-to-string (s) (pprint-facts state s))))))
+
+
 (defun simulate-plan-from-file (domain problem plan-input-file callback)
   "CALLBACK is a function with no argument, that is called after the initialization and after applying each action."
   (simulate1
@@ -24,12 +65,18 @@ Value 3   Prints the backtracking for proving axioms")
      (when (>= *verbosity* 1)
        (format *trace-output* "; loading ~a~%" domain))
      (with-open-file (s domain)
-       (read s)))
+       (handler-case
+           (read s)
+         (error ()
+           (error 'domain-parse-error)))))
    (let ((*package* (find-package :arrival.pddl)))
      (when (>= *verbosity* 1)
        (format *trace-output* "; loading ~a~%" problem))
      (with-open-file (s problem)
-       (read s)))
+       (handler-case
+           (read s)
+         (error ()
+           (error 'problem-parse-error)))))
    (let ((*package* (find-package :arrival.pddl)))
      (when (>= *verbosity* 1)
        (format *trace-output* "; loading ~a~%" plan-input-file))
@@ -48,16 +95,16 @@ Value 3   Prints the backtracking for proving axioms")
      (if (eq domain domain2)
          (when (>= *verbosity* 1)
            (format *trace-output* "; the domain and the problem matched~%"))
-         (warn "the domain name in the problem file does not match the name in the domain file"))
+         (error 'domain-name-mismatch-error))
      (simulate2 domain-body problem-body callback))
     ((`(arrival.pddl::define (arrival.pddl::domain ,_) ,@_)
        _)
-     (error "malformed problem file input"))
+     (error 'domain-parse-error))
     ((_
       `(arrival.pddl::define (arrival.pddl::problem ,_)
           (:domain ,_)
          ,@_))
-     (error "malformed domain file input"))))
+     (error 'problem-parse-error))))
 
 (defun simulate2 (domain problem callback)
   (when (>= *verbosity* 1)
@@ -115,9 +162,9 @@ Value 3   Prints the backtracking for proving axioms")
      (if (test *goal*)
          (when (>= *verbosity* 1)
            (format *trace-output* "; goal condition satisfied~%"))
-         (error "Goal not satisfied state:~%~a~%goal~%~a"
-                (facts)
-                *goal*)))))
+         (error 'goal-not-satisfied-error
+                :state (facts)
+                :goal *goal*)))))
 
 (defmacro progv* (vars vals &body body)
   "progv + printing feature."
@@ -172,16 +219,12 @@ applies an action of the form (name . args) to the current state."
         (progv* params args
           (let ((*print-circle* nil))
             (assert (test pre) nil
-                    "Precondition for action ~a unsatisfied.~2%~@{ ~a = ~a~2%~}"
-                    (pprint-pddl-to-string action)
-                    :parameters
-                    (pprint-pddl-to-string params)
-                    :args
-                    (pprint-pddl-to-string args)
-                    :precondition
-                    (pprint-pddl-to-string pre)
-                    :state
-                    (with-output-to-string (s) (pprint-facts s))))
+                    'precondition-not-satisfied-error
+                    :state (facts)
+                    :action action
+                    :params params
+                    :args args
+                    :pre pre))
           (when (>= *verbosity* 1)
             (format *trace-output* "; Precondition ~a satisfied~%" pre))
           (apply-effect eff)))))))
@@ -474,7 +517,7 @@ it includes the type predicates (true by default)"
   (let ((*package* (find-package :arrival.pddl)))
     (prin1 thing s)))
 
-(defun pprint-facts (&optional (s *standard-output*))
+(defun pprint-facts (facts &optional (s *standard-output*))
   "Print the list of facts to the stream, inside the PDDL package."
-  (pprint-pddl (sort (facts) #'fact<) s))
+  (pprint-pddl (sort facts #'fact<) s))
 
