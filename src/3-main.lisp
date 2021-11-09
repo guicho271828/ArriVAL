@@ -86,6 +86,6 @@
   (simulate-plan-from-file
    domain problem plan-output-file
    (lambda ()
-     (pprint-facts trace-output)
+     (pprint-facts (facts) trace-output)
      (fresh-line trace-output)))
   (fresh-line trace-output))
