@@ -95,7 +95,7 @@ Value 3   Prints the backtracking for proving axioms")
      (if (eq domain domain2)
          (when (>= *verbosity* 1)
            (format *trace-output* "; the domain and the problem matched~%"))
-         (error 'domain-name-mismatch-error))
+         (cerror "continue to ignore" 'domain-name-mismatch-error))
      (simulate2 domain-body problem-body callback))
     ((`(arrival.pddl::define (arrival.pddl::domain ,_) ,@_)
        _)
@@ -162,9 +162,10 @@ Value 3   Prints the backtracking for proving axioms")
      (if (test *goal*)
          (when (>= *verbosity* 1)
            (format *trace-output* "; goal condition satisfied~%"))
-         (error 'goal-not-satisfied-error
-                :state (facts)
-                :goal *goal*)))))
+         (cerror "continue to ignore"
+                 'goal-not-satisfied-error
+                 :state (facts)
+                 :goal *goal*)))))
 
 (defmacro progv* (vars vals &body body)
   "progv + printing feature."
