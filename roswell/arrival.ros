@@ -11,5 +11,7 @@ exec ros dynamic-space-size=8000 -L sbcl-bin -m arrival -Q -- $0 "$@"
 (in-package :arrival)
 
 (defun main (&rest argv)
-  (apply #'simulate-main argv))
+  (handler-case (apply #'simulate-main argv)
+    (error ()
+      (ros:quit 1))))
 ;;; vim: set ft=lisp lisp:
