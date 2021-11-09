@@ -7,6 +7,7 @@
   (log:config :sane)
   (parse-arguments argv))
 
+(defvar *allowed-conditions* nil)
 
 (defun parse-arguments (argv)
   (ematch argv
@@ -35,23 +36,30 @@
     ((list* (or "--no-type") rest)
      (setf *exclude-type-predicates-in-trace* t)
      (parse-arguments rest))
+
+    ((list* (or "-d" "--Eno-domain-name") rest)
+     (push 'domain-name-mismatch-error *allowed-conditions*)
+     (parse-arguments rest))
+    ((list* (or "-g" "--Eno-goal-condition") rest)
+     (push 'goal-not-satisfied-error *allowed-conditions*)
+     (parse-arguments rest))
+    ((list* (or "-p" "--Eno-precondition") rest)
+     (push 'precondition-not-satisfied-error *allowed-conditions*)
+     (parse-arguments rest))
     
     ((list _ _ _)
      (parse-arguments `(,@argv "/dev/stdout")))
     
     ((list domain problem plan-output-file trace-output-file)
-     (with-open-file (s trace-output-file :direction :output :if-does-not-exist :create :if-exists :supersede)
-       (simulate-plan-from-file
-        domain problem plan-output-file
-        (lambda ()
-          (pprint-facts s)
-          (fresh-line s)))
-       (fresh-line s)))
+     (parse-argument2 domain problem plan-output-file trace-output-file))
     (_
-     (format *error-output* "Usage: [--no-type] [-v[v[v]] | --verbose N] [-r|--relaxed] arrival domain problem planfile [trace-output]~%")
+     (format *error-output* "Usage: [options] arrival domain problem planfile [trace-output]~%")
      (format *error-output* "     --no-type   : The trace output will not contain the type predicates~%")
      (format *error-output* "-v | --verbose N : Specify the verbosity, from 0 to 3                   ~%")
      (format *error-output* "-r | --relaxed   : Perform the relaxed planning instead                 ~%")
+     (format *error-output* "-d | --Eno-domain-name    : do not report error with domain-name mismatch           ~%")
+     (format *error-output* "-g | --Eno-goal-condition : do not report error when goals are not satisfied        ~%")
+     (format *error-output* "-p | --Eno-precondition   : do not report error when preconditions are not satisfied~%")
      (format *error-output* "Got ARGV: ~a~%" argv)
      (format *error-output* "~{~30@a: ~a~%~}"
              (list #+sbcl "dynamic space size" #+sbcl (sb-ext:dynamic-space-size)
@@ -62,3 +70,22 @@
                    "machine version" (machine-version)
                    "software type" (software-type)
                    "software version" (software-version))))))
+
+;; ignore certain errors
+(defun parse-argument2 (domain problem plan-output-file trace-output-file)
+  (handler-bind
+      ((error (lambda (c)
+                (format *error-output* "~a~%" c)
+                (if (member (type-of c) *allowed-conditions*)
+                    (continue c)))))
+    (parse-argument3 domain problem plan-output-file trace-output-file)))
+
+;; call simulate-plan-from-file
+(defun parse-argument3 (domain problem plan-output-file trace-output-file)
+  (with-open-file (s trace-output-file :direction :output :if-does-not-exist :create :if-exists :supersede)
+    (simulate-plan-from-file
+     domain problem plan-output-file
+     (lambda ()
+       (pprint-facts s)
+       (fresh-line s)))
+    (fresh-line s)))
